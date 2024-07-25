@@ -3,6 +3,9 @@ module.exports = {
   Content:require('./ContentPost'),
   Query:require('./Query'),
   Category:require('./Category'),
-  Banner:require('./Banner')
+  Banner:require('./Banner'),
+  Team:require('./Team'),
+  About:require('./About'),
+  Privacy:require('./PrivacyPolicy'),
  
 };

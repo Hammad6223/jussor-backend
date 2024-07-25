@@ -3,5 +3,8 @@ module.exports = {
   contentController: require("./contentController"),
   queryController: require("./queryController"),
   categoryController: require("./categoryController"),
-  bannerController: require("./bannerController")
+  bannerController: require("./bannerController"),
+  teamController: require("./teamController"),
+  aboutController: require("./aboutController"),
+  privacyController: require("./privacyController"),
 };

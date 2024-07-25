@@ -94,7 +94,7 @@ router.route("/updateContentPost").put(
 
 //delete ContentPost
 router
-  .route("/deleteContentPost/:id")
+  .route("/deleteContentPost/:categoryId")
   .delete(
     //  Authentication.UserAuth,
      Controller.contentController.declineContent);
@@ -121,4 +121,7 @@ router.route("/getHomeContent").get(
   Controller.contentController.getHomeContent
 );
 
+router.route("/getCategoryContents/:categoryId").get(
+  Controller.contentController.getAllCategoryContents
+);
 module.exports = router;

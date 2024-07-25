@@ -148,7 +148,7 @@ module.exports = {
       const { childParams } = req.query;
 
       if (childParams) {
-        const deletedCategory = await Model.Category.findById(CategoryId);
+        const deletedCategory = await Model.Category.findByIdAndDelete({_id:CategoryId});
 
         await deletedCategory.customUpdate({ isDeleted: true });
         // If category is not found, return a bad request response
@@ -255,4 +255,37 @@ module.exports = {
     }
   }),
 
+  getSubCategories: catchAsync(async (req, res, next) => {
+    console.log("getSubCategories is called");
+    try {
+      let parentCategory = req.params.id;
+      let subcategories = await Model.Category.find({
+        isDeleted: false,
+        parentCategory: parentCategory,
+      })
+        .select("_id categoryName parentCategory")
+        .populate({
+          path: "parentCategory",
+          select: "_id categoryName",
+        })
+        .sort("-_id");
+      const CategorySize = subcategories.length;
+
+      const result = {
+        Category: subcategories,
+        count: CategorySize,
+      };
+
+      // Check if no categories are found
+
+      if (CategorySize === 0) {
+        // Return an empty array as the result
+        return res.ok("No subcategories found", []);
+      }
+      // Return a success response with the result
+      return res.ok("subCategorydetails found successfully", result);
+    } catch (error) {
+      throw new HTTPError(Status.INTERNAL_SERVER_ERROR, error);
+    }
+  }),
 };

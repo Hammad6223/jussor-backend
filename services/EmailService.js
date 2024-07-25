@@ -52,8 +52,6 @@
 // 	},
 //   };
   
-
-
 const nodeMailer = require("nodemailer");
 
 const transporter = nodeMailer.createTransport({
@@ -66,10 +64,10 @@ const transporter = nodeMailer.createTransport({
   },
 });
 
-const from = "no-reply <vagabond.co.usa>";
+const from = "no-reply <jusoor>";
 
 module.exports = {
-  sendEmail: (text, to, subject) => {
+  sendEmail: (text, subject, to) => { // Corrected parameter order
     return new Promise((resolve, reject) => {
       const mailOptions = {
         from: from,
@@ -85,5 +83,5 @@ module.exports = {
       });
     });
   },
-};
+}
 

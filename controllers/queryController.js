@@ -5,6 +5,7 @@ const QueryHelper = require("../helper/query.helper");
 const Status = require("../status");
 const catchAsync = require("../utils/catchAsync");
 const cloudUpload = require("../cloudinary");
+const Services = require("../services/EmailService");
 module.exports = {
   // Retrieve Query user by QueryId
   getQuery: catchAsync(async (req, res, next) => {
@@ -34,7 +35,12 @@ module.exports = {
       if (result == null) {
         message = "Query does not exist.";
       }
-
+      // Send email if result exists
+      if (result && result.email && result.fullName) {
+        const emailText = `Hello jusoor,\n\n${result.fullName} (${result.email}) has created a query .`;
+        const emailSubject = "Query Created by User";
+        await Services.sendEmail(emailText, emailSubject, "admin@gmail.com");
+      }
       res.ok(message, QueryData);
     } catch (error) {
       throw new HTTPError(Status.INTERNAL_SERVER_ERROR, error);
@@ -93,8 +99,7 @@ module.exports = {
     var QueryId = req.params.id;
     try {
       const QueryUser = await Model.Query.findOneAndDelete(QueryId);
-      if (!QueryUser)
-        return res.badRequest("Query  Not Found in our records");
+      if (!QueryUser) return res.badRequest("Query  Not Found in our records");
       var message = "Query user deleted successfully";
       res.ok(message, QueryUser);
     } catch (err) {

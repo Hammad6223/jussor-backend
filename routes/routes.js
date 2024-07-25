@@ -6,4 +6,8 @@ router.use("/contentPost", Routes.contentRoutes);
 router.use("/query", Routes.queryRoutes),
 router.use("/category", Routes.categoryRoutes),
 router.use("/banner", Routes.bannerRoutes),
+router.use("/team", Routes.teamRoutes),
+router.use("/about", Routes.aboutRoutes),
+router.use("/privacy", Routes.privacyRoutes)
+
 module.exports = router;

@@ -3,6 +3,10 @@ module.exports = {
   contentRoutes: require("./contentRoutes"),
   queryRoutes: require("./queryRoutes"),
   categoryRoutes: require("./categoryRoutes"),
-  bannerRoutes: require("./bannerRoutes")
+  bannerRoutes: require("./bannerRoutes"),
+  teamRoutes: require("./teamRoutes"),
+  aboutRoutes: require("./aboutRoutes"),
+  privacyRoutes: require("./privacyRoutes")
+
 
 };

@@ -1,24 +1,20 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
-const QueryModel = new Schema(
+const TeamModel = new Schema(
   {
-    fullName: {
+    name: {
       type: String,
       required: true,
     },
-    email: {
+    designation: {
       type: String,
-      lowercase: true,
-      trim: true,
       required: true,
     },
-    subject:{
-     type:String
-    },
-    phoneNumber: {
+    profilePic: {
       type: String,
+      required: true,
     },
-    query: {
+    twitter_url: {
       type: String,
     },
   },
@@ -28,7 +24,7 @@ const QueryModel = new Schema(
   }
 );
 
-QueryModel.set("toJSON", {
+TeamModel.set("toJSON", {
   virtuals: false,
   transform: (doc, ret, options) => {
     delete ret.__v;
@@ -36,5 +32,5 @@ QueryModel.set("toJSON", {
   },
 });
 
-const Query = mongoose.model("Query", QueryModel);
-module.exports = Query;
+const Team = mongoose.model("Team", TeamModel);
+module.exports = Team;

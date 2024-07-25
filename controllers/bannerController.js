@@ -29,22 +29,6 @@ module.exports = {
     try {
         const bannerData = req.body;
 
-        // Check if the number of existing image banners is less than 3
-        const imageBannersCount = await Model.Banner.countDocuments({
-            image: { $exists: true }
-        });
-        if (req.files && req.files.image && imageBannersCount + req.files.image.length > 3) {
-            throw new Error("Cannot create more than 3 image banners.");
-        }
-
-        // Check if the number of existing video banners is less than 1
-        const videoBannersCount = await Model.Banner.countDocuments({
-            video: { $exists: true }
-        });
-        if (req.files && req.files.video && videoBannersCount + req.files.video.length > 1) {
-            throw new Error("Cannot create more than 1 video banner.");
-        }
-
         // Upload image if available
         if (req.files && req.files.image) {
             const image = req.files.image[0];
@@ -62,21 +46,6 @@ module.exports = {
             bannerData.video = videoUrl;
         }
 
-        // Check again if uploading the banner exceeded the limits
-        const updatedImageBannersCount = await Model.Banner.countDocuments({
-            image: { $exists: true }
-        });
-        const updatedVideoBannersCount = await Model.Banner.countDocuments({
-            video: { $exists: true }
-        });
-
-        if (updatedImageBannersCount > 3) {
-            throw new Error("Cannot create more than 3 image banners.");
-        }
-        if (updatedVideoBannersCount > 1) {
-            throw new Error("Cannot create more than 1 video banner.");
-        }
-
         // Create the new banner
         const result = await BannerHelper.createBanner(bannerData);
         if (!result) {
@@ -89,7 +58,6 @@ module.exports = {
         throw new HTTPError(Status.INTERNAL_SERVER_ERROR, error.message);
     }
 }),
-
   // Get all Banner users with full details
   getAllBanner: catchAsync(async (req, res, next) => {
     console.log("Bannerdetails is called");

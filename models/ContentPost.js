@@ -1,15 +1,15 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
-const categorySchema = new Schema({
-  category: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Category",
-  },
-  subcategory: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Category",
-  },
-});
+// const categorySchema = new Schema({
+//   category: {
+//     type: mongoose.Schema.Types.ObjectId,
+//     ref: "Category",
+//   },
+//   subcategory: {
+//     type: mongoose.Schema.Types.ObjectId,
+//     ref: "Category",
+//   },
+// });
 const ContentPostSchema = new Schema(
   {
     title: {
@@ -30,8 +30,15 @@ const ContentPostSchema = new Schema(
     primaryImage: {
       type: String,
     },
-
-    categoryAndSubCategory: categorySchema,
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+    },
+    subcategory: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+    },
+    // categoryAndSubCategory: categorySchema,
   },
   {
     timestamps: true,

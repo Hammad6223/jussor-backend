@@ -98,6 +98,13 @@ module.exports = {
       if (!user) {
         throw new HTTPError(Status.BAD_REQUEST, Message.userNotFound);
       }
+
+      // Generate a random temporary password
+      const temporaryPassword = generateRandomPassword();
+
+      // Update user's password with the temporary password
+      user.password =   temporaryPassword;
+
       // Generate a unique token for password reset
       const resetToken = crypto.randomBytes(20).toString("hex");
 
@@ -105,25 +112,26 @@ module.exports = {
       user.resetPasswordToken = resetToken;
       user.resetPasswordExpires = Date.now() + 600000; // Token expires in 10 minutes
 
-      // Save the user document with the reset token
+      // Save the user document with the reset token and temporary password
       await user.save();
 
-      // Send email with the reset link
-      const resetLink = ` https://qubi-User-dashboard.vercel.app//forgetPassword?token=${resetToken}`;
+      const emailBody = `
+        Dear User,
 
-      // Send email with temporary password
-      const replacements = {
-        resetLink,
-      };
+        Temporary Password: ${temporaryPassword}
+
+        This temporary password will be valid until you reset your password.
+
+        Regards,
+        Your App Team`;
 
       await Services.EmailService.sendEmail(
-        resetLink,
-        "otp",
-        email,
-        "Change Password Link"
+        emailBody,
+        "Change Password Link and Temporary Password",
+        email
       );
 
-      return res.ok("Reset Link has been sent to your registered email.");
+      return res.ok("Reset link and temporary password have been sent to your registered email.");
     } catch (error) {
       // Handle errors
       if (error instanceof HTTPError) {
@@ -326,7 +334,7 @@ module.exports = {
   }),
   uploadUserProfilePic: catchAsync(async (req, res, next) => {
     const userData = req.body;
-    const { address } = req.body;
+    const userId=req.user._id
     try {
       if (req.files.profilePic) {
         const file = req.files.profilePic[0]; // Assuming you only want to handle one profile picture
@@ -336,30 +344,12 @@ module.exports = {
         var cloudinaryResult = await cloudUpload.cloudinaryUpload(path);
       }
       // Fetch the user
-      const user = await Model.User.findById(userData.userId);
+      const user = await Model.User.findById(userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      // Handle address update
-      if (address) {
-        const addressData = JSON.parse(address);
-        let savedAddress;
-
-        // Check if user already has an address
-        if (user.address) {
-          savedAddress = await Model.Address.findByIdAndUpdate(
-            user.address,
-            addressData,
-            { new: true }
-          );
-        } else {
-          savedAddress = await new Model.Address(addressData).save();
-        }
-
-        user.address = savedAddress._id;
-      }
       const result = await Model.User.findByIdAndUpdate(
-        { _id: userData.userId },
+        { _id: userId },
         {
           profilePic: cloudinaryResult,
           firstName: userData.firstName,
@@ -367,7 +357,7 @@ module.exports = {
           email: userData.email,
           phoneNumber: userData.phoneNumber,
           bio: userData.bio,
-          address: user.address,
+          address: userData.address,
         },
         { new: true, runValidators: true }
       );
@@ -379,7 +369,8 @@ module.exports = {
       const message = " Data updated successfully";
       console.log(message);
       res.ok(message, result);
-    } catch (error) {
+    }
+    catch (error) {
       return res.status(500).json({
         success: false,
         message: error.message,
@@ -472,8 +463,8 @@ module.exports = {
   }),
   // Retrieve a single User with a particular ID
   getSingleUser: catchAsync(async (req, res, next) => {
-    const userId = req.params.id;
-
+    const userId = req.user._id; // Assuming the user_id is stored in the _id field of the user object
+    console.log(userId, "userId");
     try {
       const user = await Model.User.findById(userId)
         .select("-password") // Exclude the password field
@@ -524,3 +515,15 @@ module.exports = {
     }
   }),
 };
+// Function to generate a random temporary password
+function generateRandomPassword() {
+  const requiredLength = 7; // We want the random part to be 7 characters long
+  const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let randomPart = "";
+  for (let i = 0; i < requiredLength; i++) {
+    const randomIndex = Math.floor(Math.random() * charset.length);
+    randomPart += charset[randomIndex];
+  }
+  const password = randomPart + '$'; // Append '$' to the random part
+  return password;
+}

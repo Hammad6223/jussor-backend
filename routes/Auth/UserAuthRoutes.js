@@ -5,14 +5,8 @@ const path = require("path");
 const multer = require("multer");
 const fs = require("fs");
 const Authentication = require("../../services/index");
+
 const userStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    // Check if the directory exists, if not create it
-    if (!fs.existsSync("uploads/")) {
-      fs.mkdirSync("uploads/");
-    }
-    cb(null, "./uploads");
-  },
   filename: (req, file, cb) => {
     cb(
       null,
@@ -20,23 +14,44 @@ const userStorage = multer.diskStorage({
     );
   },
 });
-const upload = multer({ storage: userStorage });
 
+const imageFileFilter = function (req, file, callback) {
+  const ext = path.extname(file.originalname).toLowerCase();
+  const allowedImageTypes = [".png", ".jpg", ".gif", ".jpeg"];
+  if (allowedImageTypes.includes(ext)) {
+    callback(null, true);
+  } else {
+    callback(new Error("Only images are allowed"));
+  }
+};
+const upload = multer({
+  storage: userStorage,
+  fileFilter: function (req, file, callback) {
+    if (file.fieldname === "profilePic") {
+      imageFileFilter(req, file, callback);
+    } else {
+      callback(new Error("Invalid fieldname"));
+    }
+  },
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10 MB limit
+  },
+});
 router.route("/register").post(Controller.UserAuthController.registerUser);
 router
   .route("/userAccontVerification")
   .post(Controller.UserAuthController.accountVerificationUser);
 router.route("/login").post(Controller.UserAuthController.loginUser);
 router
-  .route("/userForgetpassword")
+  .route("/forgetPassword")
   .post(Controller.UserAuthController.forgetUserPassword);
 router
-  .route("/getSingleUser/:id")
-  .get(Controller.UserAuthController.getSingleUser);
+  .route("/getSingleUser")
+  .get(Authentication.UserAuth, Controller.UserAuthController.getSingleUser);
 
 router.route("/getAllCustomers").get(Controller.UserAuthController.getAllUsers);
 router
-  .route("/changepassword")
+  .route("/changePassword")
   .post(
     Authentication.UserAuth,
     Controller.UserAuthController.changeUserPassword
@@ -50,18 +65,15 @@ router
   .route("/deleteSingleUser/:id")
   .delete(Controller.UserAuthController.deleteUser);
 
-// router.route("/uploadProfilePic).post(
-//   upload.fields([
-//     {
-//       name: "profilePic",
-//       maxCount: 1,
-//     },
-//     {
-//       name: "resume",
-//       maxCount: 1,
-//     },
-//   ]),
-//   Controller.AuthController.setupProfile
-// );
+router.route("/uploadAdminProfile").post(
+  Authentication.UserAuth,
+  upload.fields([
+    {
+      name: "profilePic",
+      maxCount: 1,
+    },
+  ]),
+  Controller.UserAuthController.uploadUserProfilePic
+);
 
 module.exports = router;

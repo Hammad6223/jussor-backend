@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 const encrypt = require("bcrypt");
-const moment = require("moment");
 const Schema = mongoose.Schema;
 const UserModel = new Schema(
   {
@@ -17,22 +16,28 @@ const UserModel = new Schema(
       unique: true,
       lowercase: true,
       trim: true,
-      required: true
+      required: true,
     },
     password: {
-      type: String
+      type: String,
     },
     role: {
-      type: String
+      type: String,
     },
     profilePic: {
-      type: String
+      type: String,
     },
     otp: {
-      type: Number
+      type: Number,
+    },
+    phoneNumber: {
+      type: String,
+    },
+    address: {
+      type: String,
     },
     otpExpiry: {
-      type: Number
+      type: Number,
     },
     isEmailConfirmed: {
       type: Boolean,
@@ -42,9 +47,12 @@ const UserModel = new Schema(
       type: Boolean,
       default: false,
     },
-    accessToken: {
-      type: String
-    }
+    resetPasswordToken: {
+      type: String,
+    },
+    resetPasswordExpires: {
+      type: String,
+    },
   },
   {
     timestamps: true,

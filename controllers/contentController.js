@@ -78,12 +78,12 @@ module.exports = {
       var message = "Contentdetails found successfully";
       var Contents = await Model.Content.find()
         .populate({
-          path: "categoryAndSubCategory.category",
+          path: "category",
           model: "Category",
           select: "_id categoryName",
         })
         .populate({
-          path: "categoryAndSubCategory.subcategory",
+          path: "subcategory",
           model: "Category",
           select: "_id categoryName",
         })
@@ -108,8 +108,15 @@ module.exports = {
   updateContent: catchAsync(async (req, res, next) => {
     try {
       // Get the Content data from the request body
-      const { title, description, contentId, video, galleryImageIndex } =
-        req.body;
+      const {
+        title,
+        description,
+        contentId,
+        video,
+        galleryImageIndex,
+        category,
+        subcategory,
+      } = req.body;
 
       // Initialize update object
       const updateObject = {};
@@ -118,6 +125,8 @@ module.exports = {
       if (title) updateObject["title"] = title;
       if (description) updateObject["description"] = description;
       if (video) updateObject["video"] = video;
+      if (category) updateObject["category"] = category;
+      if (subcategory) updateObject["subcategory"] = subcategory;
 
       // Upload primary image if provided
       if (req.files && req.files.primaryImage) {
@@ -192,51 +201,57 @@ module.exports = {
 
   // Delete a Content user
   declineContent: catchAsync(async (req, res, next) => {
-    var ContentId = req.params.id;
+    var ContentId = req.params.categoryId;
     try {
-      const ContentUser = await Model.Content.findOneAndDelete(ContentId);
-      if (!ContentUser)
-        return res.badRequest("Content Not Found in our records");
-
-      // Deleting primaryImage from Cloudinary
-      if (ContentUser.primaryImage) {
-        const publicId = ContentUser.primaryImage.split("/").pop();
-        await cloudinary.uploader.destroy(publicId, (error, result) => {
-          if (error) {
-            console.error(
-              "Error deleting primaryImage from Cloudinary:",
-              error
-            );
-            // Handle the error if needed
-          } else {
-            console.log("primaryImage deleted from Cloudinary:", result);
-          }
-        });
-      }
-
-      // Deleting the first two images from galleryImages array from Cloudinary
-      if (ContentUser.galleryImages && ContentUser.galleryImages.length >= 2) {
-        const imagesToDelete = ContentUser.galleryImages.slice(0, 2);
-        for (const imageUrl of imagesToDelete) {
-          const publicId = imageUrl.split("/").pop();
-          await cloudinary.uploader.destroy(publicId, (error, result) => {
-            if (error) {
-              console.error("Error deleting image from Cloudinary:", error);
-              // Handle the error if needed
-            } else {
-              console.log("Image deleted from Cloudinary:", result);
-            }
-          });
+        // Find content by ID
+        const ContentUser = await Model.Content.findById({_id:ContentId});
+        // Check if content exists
+        if (!ContentUser) {
+            return res.badRequest("Content with the provided ID not found in our records");
         }
-      }
 
-      // Remove content from database
-      var message = "Content user deleted successfully";
-      res.ok(message);
+        // Deleting primaryImage from Cloudinary
+        if (ContentUser.primaryImage) {
+            const publicId = ContentUser.primaryImage.split("/").pop();
+            await cloudinary.uploader.destroy(publicId, (error, result) => {
+                if (error) {
+                    console.error(
+                        "Error deleting primaryImage from Cloudinary:",
+                        error
+                    );
+                    // Handle the error if needed
+                } else {
+                    console.log("primaryImage deleted from Cloudinary:", result);
+                }
+            });
+        }
+
+        // Deleting the first two images from galleryImages array from Cloudinary
+        if (ContentUser.galleryImages && ContentUser.galleryImages.length >= 2) {
+            const imagesToDelete = ContentUser.galleryImages.slice(0, 2);
+            for (const imageUrl of imagesToDelete) {
+                const publicId = imageUrl.split("/").pop();
+                await cloudinary.uploader.destroy(publicId, (error, result) => {
+                    if (error) {
+                        console.error("Error deleting image from Cloudinary:", error);
+                        // Handle the error if needed
+                    } else {
+                        console.log("Image deleted from Cloudinary:", result);
+                    }
+                });
+            }
+        }
+
+        // Delete content from the database
+        await Model.Content.findByIdAndDelete({_id:ContentId});
+
+        var message = "Content user deleted successfully";
+        res.ok(message);
     } catch (err) {
-      throw new HTTPError(Status.INTERNAL_SERVER_ERROR, err);
+        throw new HTTPError(Status.INTERNAL_SERVER_ERROR, err);
     }
-  }),
+}),
+
 
   getAllCategoryContent: catchAsync(async (req, res, next) => {
     console.log("getAllCategoryContent is called");
@@ -320,52 +335,128 @@ module.exports = {
   getHomeContent: catchAsync(async (req, res, next) => {
     console.log("findContentById is called");
     try {
-      // Specify the category IDs you want to exclude
-      const excludedCategoryIds = [
-        "6628fa73e1aba3d45b379734",
-        "6628fa7ce1aba3d45b379737",
-      ];
+      // Find the category ID for "جسور TV"
+      const jusoorTvCategory = await Model.Category.findOne({
+        categoryName: "جسور TV",
+      });
 
+      if (!jusoorTvCategory) {
+        return res.notFound("Category 'جسور TV' not found.");
+      }
+
+      // Fetch latest contents excluding "جسور TV" category
       const latestContents = await Model.Content.find({
-        "categoryAndSubCategory.category": { $nin: excludedCategoryIds },
+        category: { $ne: jusoorTvCategory._id },
       })
         .populate({
-          path: "categoryAndSubCategory.category",
+          path: "category",
           model: "Category",
           select: "_id categoryName",
         })
         .populate({
-          path: "categoryAndSubCategory.subcategory",
+          path: "subcategory",
           model: "Category",
           select: "_id categoryName",
         })
         .limit(5)
         .sort("-_id");
-      const includedCategoryIIds = ["6628fa7ce1aba3d45b379737"];
-      const latestPodCasts = await Model.Content.find({
-        "categoryAndSubCategory.category": { $in: includedCategoryIIds },
+      const latestJusoorContents = await Model.Content.find({
+        category: { $eq: jusoorTvCategory._id },
       })
+
         .populate({
-          path: "categoryAndSubCategory.category",
+          path: "category",
           model: "Category",
           select: "_id categoryName",
         })
         .populate({
-          path: "categoryAndSubCategory.subcategory",
+          path: "subcategory",
+          model: "Category",
+          select: "_id categoryName",
+        })
+        .limit(2)
+        .sort("-_id");
+      const latestWeeklyJusoorContents = await Model.Content.find({
+        category: { $eq: jusoorTvCategory._id },
+      })
+
+        .populate({
+          path: "category",
+          model: "Category",
+          select: "_id categoryName",
+        })
+        .populate({
+          path: "subcategory",
+          model: "Category",
+          select: "_id categoryName",
+        })
+        .limit(3)
+        .sort("-_id");
+      const latestMonthlyJusoorContents = await Model.Content.find({
+        category: { $eq: jusoorTvCategory._id },
+      })
+
+        .populate({
+          path: "category",
+          model: "Category",
+          select: "_id categoryName",
+        })
+        .populate({
+          path: "subcategory",
           model: "Category",
           select: "_id categoryName",
         })
         .limit(3)
         .sort("-_id");
 
-      // const latestContentSize = latestContents.length;
       const responseResult = {
-        fiveLatestContents: latestContents,
-        podCasts: latestPodCasts,
+        Main: latestContents,
+        JusoorTv: latestJusoorContents,
+        WeeklyPosts: latestWeeklyJusoorContents,
+        MonthlyPosts: latestMonthlyJusoorContents,
       };
 
-      // Return the latest 5 content posts
-      return res.ok(" posts found successfully", responseResult);
+      return res.ok("Posts found successfully", responseResult);
+    } catch (error) {
+      throw new HTTPError(Status.INTERNAL_SERVER_ERROR, error);
+    }
+  }),
+  getAllCategoryContents: catchAsync(async (req, res, next) => {
+    console.log("getAllCategoryContent is called");
+    try {
+      // const pageNumber = parseInt(req.query.pageNumber) || 0;
+      // const limit = parseInt(req.query.limit) || 10;
+
+      let query = {};
+
+      if (req.params.categoryId) {
+        const categoryId = req.params.categoryId;
+
+        query = {
+          $or: [{ category: categoryId }, { subcategory: categoryId }],
+        };
+      }
+
+      const contents = await Model.Content.find(query)
+        // .skip(pageNumber * limit - limit)
+        // .limit(limit)
+        .sort("-_id");
+
+      const contentSize = contents.length;
+      const result = {
+        Content: contents,
+        count: contentSize,
+      };
+
+      if (contentSize === 0) {
+        if (req.params.categoryId) {
+          return res.notFound("No content found for the provided category.");
+        } else {
+          return res.notFound("No content found.");
+        }
+      }
+
+      return res.ok("Content details found successfully", result);
     } catch (error) {
       throw new HTTPError(Status.INTERNAL_SERVER_ERROR, error);
     }

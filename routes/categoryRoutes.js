@@ -66,4 +66,8 @@ router.route("/getAllContentCategory").get(
   Controller.categoryController.getAllCategory
 );
 
+router.route("/getSubCategories/:id").get(
+  // Authentication.UserAuth,
+  Controller.categoryController.getSubCategories
+);
 module.exports = router;

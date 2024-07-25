@@ -14,12 +14,12 @@ module.exports = {
 
         const Content = await Model.Content.findOne({_id:ContentId})
         .populate({
-            path: "categoryAndSubCategory.category",
+            path: "category",
             model: "Category",
             select: "_id categoryName",
           })
           .populate({
-            path: "categoryAndSubCategory.subcategory",
+            path: "subcategory",
             model: "Category",
             select: "_id categoryName",
           });

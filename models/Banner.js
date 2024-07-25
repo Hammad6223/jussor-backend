@@ -17,6 +17,10 @@ const BannerModel = new Schema(
       {
         type: String,
       },
+      post_id: {
+        type: Schema.Types.ObjectId,
+        ref: 'ContentPost',
+      },
   },
   {
     timestamps: true,

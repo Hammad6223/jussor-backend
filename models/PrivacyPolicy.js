@@ -1,25 +1,18 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
-const QueryModel = new Schema(
+const PrivacyPolicyModel = new Schema(
   {
-    fullName: {
+    title: {
       type: String,
       required: true,
     },
-    email: {
+    description: {
       type: String,
-      lowercase: true,
-      trim: true,
       required: true,
     },
-    subject:{
-     type:String
-    },
-    phoneNumber: {
+    image: {
       type: String,
-    },
-    query: {
-      type: String,
+      required: true,
     },
   },
   {
@@ -28,7 +21,7 @@ const QueryModel = new Schema(
   }
 );
 
-QueryModel.set("toJSON", {
+PrivacyPolicyModel.set("toJSON", {
   virtuals: false,
   transform: (doc, ret, options) => {
     delete ret.__v;
@@ -36,5 +29,5 @@ QueryModel.set("toJSON", {
   },
 });
 
-const Query = mongoose.model("Query", QueryModel);
-module.exports = Query;
+const PrivacyPolicy = mongoose.model("PrivacyPolicy", PrivacyPolicyModel);
+module.exports = PrivacyPolicy;
